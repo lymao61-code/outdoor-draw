@@ -179,6 +179,10 @@
       <span class="control-label">愿意走多远</span>
       <div class="chips" id="distChips" role="group" aria-label="选择距离"></div>
     </div>
+    <div class="control-row">
+      <span class="control-label">签的类型</span>
+      <div class="chips" id="poolChips" role="group" aria-label="选择签池"></div>
+    </div>
   </div>
 
   <div class="draw-zone">
@@ -234,7 +238,23 @@
     { name: "夜跑 3 公里，走回来", w: "night", d: "near", dur: "40 分钟", note: "跑完吹着风走回家，一天圆满结束。" },
     { name: "去高处看城市夜景", w: "night", d: "mid", dur: "1 小时", note: "天桥、 rooftops 观景台，哪高去哪。" },
     { name: "看一场晚间演出或 Livehouse", w: "night", d: "far", dur: "2–3 小时", note: "提前一天查好场次，给夜晚一个期待。" },
-    { name: "楼下散步 20 分钟，看月亮", w: "night", d: "near", dur: "20 分钟", note: "月亮不在也算，星空偶尔旷工。" }
+    { name: "楼下散步 20 分钟，看月亮", w: "night", d: "near", dur: "20 分钟", note: "月亮不在也算，星空偶尔旷工。" },
+
+    // ---------- 上海热门去处（hot）----------
+    { name: "愚园路 Citywalk：中山公园走到静安寺", w: "sunny", d: "mid", dur: "1–2 小时", hot: true, note: "梧桐、老洋房、独立小店一路密集，累了随便钻进一家咖啡馆。" },
+    { name: "武康路—安福路慢慢逛", w: "sunny", d: "mid", dur: "1–2 小时", hot: true, note: "武康大楼打卡后拐进安福路，话剧中心、多抓鱼、街角咖啡都在这条线上。" },
+    { name: "西岸滨江：龙美术馆→油罐→西岸梦中心", w: "sunny", d: "far", dur: "半天", hot: true, note: "3.5 公里滨江步道，工业遗迹改造的艺术带，骑行或步行都舒服。" },
+    { name: "蟠龙天地：江南水乡版的新天地", w: "sunny", d: "far", dur: "半天", hot: true, note: "青浦的古镇街区，宠物友好大草坪，天气好可以外带野餐。" },
+    { name: "上生·新所：茑屋书店 + 海军俱乐部泳池", w: "cloudy", d: "mid", dur: "1–2 小时", hot: true, note: "老建筑改造的园区，阴天人少，适合拍照和泡书店。" },
+    { name: "张园 + 丰盛里逛一圈", w: "cloudy", d: "mid", dur: "1–2 小时", hot: true, note: "石库门老里弄和商业的混搭，顺路喝杯咖啡看人来人往。" },
+    { name: "EKA·天物：金桥工业遗存园区", w: "cloudy", d: "far", dur: "2–3 小时", hot: true, note: "百年厂房改的「露天建筑博物馆」，咖啡店密度极高。" },
+    { name: "今潮8弄：四川北路的老弄堂新玩法", w: "cloudy", d: "mid", dur: "1–2 小时", hot: true, note: "虹口老弄堂改造的商业街区，比网红街区人少一半。" },
+    { name: "思南公馆街区压马路", w: "sunny", d: "mid", dur: "1–2 小时", hot: true, note: "法式花园洋房群，每周六日常有市集，提前查一下。" },
+    { name: "田子坊钻巷子", w: "cloudy", d: "mid", dur: "1–2 小时", hot: true, note: "游客多但巷子深处仍有安静的画室和手作店。" },
+    { name: "苏州河步道：中山公园码头走到外滩源", w: "cloudy", d: "far", dur: "2–3 小时", hot: true, note: "新贯通的滨河步道，华政段、啤酒厂段都值得停。" },
+    { name: "龙华会：千年古寺旁的新街区", w: "cloudy", d: "mid", dur: "1–2 小时", hot: true, note: "古寺塔影 + 新商业，民俗和商业混搭得很妙。" },
+    { name: "新天地石库门街区，一直逛到华灯初上", w: "night", d: "mid", dur: "2 小时", hot: true, note: "白天看建筑，晚上看灯，晚饭正好在附近解决。" },
+    { name: "鸿寿坊：普陀的新烟火气街区", w: "night", d: "mid", dur: "1–2 小时", hot: true, note: "长寿路地铁站旁，老厂房改的夜市感街区，适合饭后逛。" }
   ];
 
   var WEATHERS = [
@@ -249,8 +269,13 @@
     { key: "far", label: "特意去一趟" }
   ];
 
+  var POOLS = [
+    { key: "all", label: "全部灵感" },
+    { key: "hot", label: "上海热门" }
+  ];
+
   // ---------- 状态 ----------
-  var state = { weather: "sunny", dist: "mid" };
+  var state = { weather: "sunny", dist: "mid", pool: "all" };
   var rolling = false;
   var lastPick = null;
 
@@ -305,15 +330,17 @@
 
   var footEl = document.getElementById("foot");
   function poolFor() {
-    var p = POOL.filter(function (a) { return a.w === state.weather && a.d === state.dist; });
+    var base = state.pool === "hot" ? POOL.filter(function (a) { return a.hot; }) : POOL;
+    var p = base.filter(function (a) { return a.w === state.weather && a.d === state.dist; });
     if (p.length) return p;
-    p = POOL.filter(function (a) { return a.w === state.weather; });
+    p = base.filter(function (a) { return a.w === state.weather; });
     if (p.length) return p;
-    return POOL;
+    return base;
   }
   function updateFoot() {
     var n = poolFor().length;
-    footEl.textContent = "当前组合下有 " + n + " 支签 · 天气为手动选择，以窗外为准";
+    var poolName = state.pool === "hot" ? "上海热门" : "全部灵感";
+    footEl.textContent = poolName + " · 当前组合下有 " + n + " 支签 · 天气为手动选择，以窗外为准";
   }
 
   // ---------- 抽签动画 ----------
@@ -330,12 +357,16 @@
     }[pick.w];
     var wLabel = { sunny: "晴天适配", cloudy: "阴天适配", rainy: "雨天适配", night: "夜晚适配" }[pick.w];
     var dLabel = { near: "出门就行", mid: "附近走走", far: "特意去一趟" }[pick.d];
+    var pinIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6.5-5.4-6.5-10.2A6.5 6.5 0 0 1 12 4.3a6.5 6.5 0 0 1 6.5 6.5C18.5 15.6 12 21 12 21z"/><circle cx="12" cy="10.8" r="2.2"/></svg>';
+    var firstTag = pick.hot
+      ? '<span class="tag">' + pinIcon + '上海热门去处</span>'
+      : '<span class="tag">' + icon + wLabel + '</span>';
 
     resultEl.classList.add("is-hit");
     resultEl.innerHTML =
       '<div class="draw-name">' + pick.name + '</div>' +
       '<div class="draw-tags">' +
-        '<span class="tag">' + icon + wLabel + '</span>' +
+        firstTag +
         '<span class="tag">' + dLabel + '</span>' +
         '<span class="tag">' + pick.dur + '</span>' +
       '</div>' +
@@ -382,6 +413,7 @@
   state.weather = defaultWeather();
   buildChips("weatherChips", WEATHERS, "weather");
   buildChips("distChips", DISTS, "dist");
+  buildChips("poolChips", POOLS, "pool");
   updateFoot();
   drawBtn.addEventListener("click", draw);
 })();
